@@ -1,0 +1,37 @@
+{
+    "name": "jvelletti/jve-upgradewizard",
+    "type": "typo3-cms-extension",
+    "version": "12.4.1",
+    "description": "Update helper for lts12 ",
+
+    "keywords": [
+        "template",
+        "typo3"
+    ],
+    "authors": [
+        {
+            "name": "Joerg Velletti",
+            "role": "Developer",
+            "homepage": "http://www.velletti.de/"
+        }
+    ],
+    "require": {
+        "typo3/cms-core": "^11.5 || ^12.4"
+    },
+    "license": "GPL-2.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "Jvelletti\\JveUpgradewizard\\": "Classes",
+            "Jvelletti\\JveUpgradewizard\\Upgrades\\": "Classes"
+        }
+    },
+    "replace": {
+        "jvelletti/jve-upgradewizard": "self.version",
+        "typo3-ter/jve-upgradewizard": "self.version"
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "jve_upgradewizard"
+        }
+    }
+}
