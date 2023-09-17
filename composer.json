@@ -1,7 +1,7 @@
 {
     "name": "jvelletti/jve-upgradewizard",
     "type": "typo3-cms-extension",
-    "version": "12.4.5",
+    "version": "12.4.6",
     "description": "Update helper for lts12 ",
 
     "keywords": [
@@ -21,7 +21,7 @@
     "license": "mit",
     "autoload": {
         "psr-4": {
-            "Jvelletti\\JveUpgradewizard\\": "Classes",
+            "Jvelletti\\JveUpgradewizard\\": "Classes"
         }
     },
     "replace": {

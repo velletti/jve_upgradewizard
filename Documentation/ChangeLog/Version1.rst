@@ -14,7 +14,7 @@ ChangeLog
 For details have a look at the Github commits:
 https://github.com/velletti/jve_upgradewizard/commits/main
 
-
+12.4.6 - fixes unneeded trailing comma in Composer.json
 12.4.5 - Still connections with github, extension repository and composer packages
 12.4.3 - connections with github, extension repository and composer packages
 12.4.2 - some cleanup
