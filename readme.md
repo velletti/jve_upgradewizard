@@ -61,3 +61,33 @@ fixes also lines starting with # but keep coment status intakt.
 ## Warns if file in fileadmin and not in any EXT Folder:
    
      @import "/fileadmin/template/TSConfig/TSConfig.typoscript" 
+
+
+
+## Internal reminder for the extension maintainer:
+To Update this extension in TER:
+change version Number to "x.y.z" in Documentation\ in Settings.cfg and Index.rst
+create Tag "x.y.z"
+git push --tags
+
+create new zip file:
+cd typo3conf/ext/jve_upgradewizard
+git archive -o "${PWD##*/}_x.y.z.zip" HEAD
+
+f.e.:
+git archive -o "${PWD##*/}_12.4.3.zip" HEAD
+
+
+Upload ZIP File to https://extensions.typo3.org/my-extensions
+git push
+
+setup packagist Webhook:
+https://packagist.org/api/update-package?username=jvelletti
+
+api Token from Profile:
+https://packagist.org/profile/
+
+check:
+https://intercept.typo3.com/admin/docs/deployments
+https://packagist.org/packages/jvelletti/jv-jve_upgradewizard
+https://extensions.typo3.org/extension/jve_upgradewizard/
