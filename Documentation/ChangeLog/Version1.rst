@@ -15,7 +15,8 @@ For details have a look at the Github commits:
 https://github.com/velletti/jve_upgradewizard/commits/main
 
 
-12.4.3 - conntions with github, extension repository and composer packages
+12.4.5 - Still connections with github, extension repository and composer packages
+12.4.3 - connections with github, extension repository and composer packages
 12.4.2 - some cleanup
 12.4.1 - first running Version
 

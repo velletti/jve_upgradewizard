@@ -75,7 +75,7 @@ cd typo3conf/ext/jve_upgradewizard
 git archive -o "${PWD##*/}_x.y.z.zip" HEAD
 
 f.e.:
-git archive -o "${PWD##*/}_12.4.3.zip" HEAD
+git archive -o "${PWD##*/}_12.4.5.zip" HEAD
 
 
 Upload ZIP File to https://extensions.typo3.org/my-extensions
