@@ -14,6 +14,8 @@ ChangeLog
 For details have a look at the Github commits:
 https://github.com/velletti/jve_upgradewizard/commits/main
 
+12.4.7 - add a console command to rename and fix local typoscipt and tsconfig files
+         console command is not planned for production. use it only on lcal dev mashine
 12.4.6 - fixes unneeded trailing comma in Composer.json
 12.4.5 - Still connections with github, extension repository and composer packages
 12.4.3 - connections with github, extension repository and composer packages

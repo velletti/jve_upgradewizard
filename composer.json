@@ -1,12 +1,15 @@
 {
     "name": "jvelletti/jve-upgradewizard",
     "type": "typo3-cms-extension",
-    "version": "12.4.6",
-    "description": "Update helper for lts12 ",
+    "version": "12.4.7",
+    "description": "Update helper for lts12 Fixes the ways Typoscript and TSconfig included files have been added in database.",
 
     "keywords": [
+        "typoscript",
+        "upgrade",
+        "LTS12",
         "template",
-        "typo3"
+        "TYPO3"
     ],
     "authors": [
         {
@@ -16,7 +19,7 @@
         }
     ],
     "require": {
-        "typo3/cms-core": "^12.4"
+        "typo3/cms-core": "^11.5 || ^12.4"
     },
     "license": "mit",
     "autoload": {

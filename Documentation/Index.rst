@@ -27,6 +27,9 @@ Add/remove Frontend User to Group
    Just needed during Upgrade from older TYPO3 version to LTS 12.4
    Fixes the ways included files have been added in database.
 
+   Fixes filenames and there Content on a local DEV mashine
+
+
    Tested with TYPO3 LTS 12.4.6
 
    works on following fields:
@@ -43,7 +46,7 @@ Add/remove Frontend User to Group
    Version: |version|
 
 :Keywords:
-  typoscript,include,import,upgrade,jve
+  typoscript,tsconfig,rename,include,import,upgrade,jve
 
 :Copyright:
   2023
