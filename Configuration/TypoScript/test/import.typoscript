@@ -1,0 +1,3 @@
+@import "/typo3conf/ext/jve_upgradewizardConfiguration/TypoScript/test/SubFolder/include.ts"
+@import "EXT:jve_upgradewizardConfiguration/TypoScript/test/SubFolder/text.txt"
+

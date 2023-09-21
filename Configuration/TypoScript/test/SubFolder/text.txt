@@ -1,0 +1,2 @@
+# <InCLUDE_TYPOSCRIPT src="/fileadmin/does-not-exist/dummy-to-test-Warning.text">
+<InCLUDE_TYPOSCRIPT src="/fileadmin/does-not-exist/dummy-to-test-Error.text">
