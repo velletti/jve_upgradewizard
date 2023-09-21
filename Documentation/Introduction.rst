@@ -13,7 +13,7 @@ INTRODUCTION
 ============
 
 NO WARRANTY for this script!
-feel free to add `an Issues on Git <https://github.com/velletti/jve_upgradewizard/issues>`_
+feel free to add `an Issue on Git <https://github.com/velletti/jve_upgradewizard/issues>`_
 
     1. you should have a database copy!
     2. you should be aware in case of many pages or fe_users, it may be slow
@@ -48,15 +48,10 @@ this part fixes files in your template Folder. This should be under git / vcs co
     ./vendor/bin/typo3 jvelletti:updatefiles  -vv
 
 
+Details
+"""""""
 
-
-
-To Dos
-""""""
-
-   maybe work on a option to fix also local filenames and includes in filenames.
-   but as this is easy to solve by "refactor" in an IDE like PHP Storm,
-   this is currently not on my prio list.
+   see more details in ` readme.md on Git <https://github.com/velletti/jve_upgradewizard#readme>`_
 
 
 
