@@ -18,8 +18,8 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
 
     public int $verboseLevel = 0 ;
     public bool $error = false ;
-    public array|bool $currentTemplate = [] ;
-    public array|bool $currentPage = [] ;
+    public ?array $currentTemplate = [] ;
+    public ?array $currentPage = [] ;
 
     public array $TSconfigs = [ 'be_groups' => 'title' , 'be_users' => "username" ,
                                 'fe_groups' => 'title', 'fe_users' => "name",
@@ -205,7 +205,7 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             $this->debugOutput( 123 ,  "has INCLUDE_TYPOSCRIPT or  @import " ) ;
             $line = str_replace('"', "'", $line);
         } else {
-           return $line ;
+            return $line ;
         }
         $temp = GeneralUtility::trimExplode( "'" , $line ) ;
         $result =  $line ;
@@ -322,4 +322,14 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
     }
 
 
+    /**
+     * Return the identifier for this wizard
+     * This should be the same string as used in the ext_localconf class registration
+     *
+     * @return string
+     */
+    public function getIdentifier(): string
+    {
+        return 'jveUpgradewizard_upgradeTemplates' ;
+    }
 }

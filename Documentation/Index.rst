@@ -30,9 +30,10 @@ Add/remove Frontend User to Group
    Fixes filenames and there Content on a local DEV mashine
 
 
-   Tested with TYPO3 LTS 12.4.6
+   Tested with TYPO3 LTS 11.4.31 on PHP 7.4
+   Tested with TYPO3 LTS 12.4.6 on PHP 8.1
 
-   works on following fields:
+   Works on following fields:
 
    **sys_template** -> config and constants
    **pages** -> TSconfig
@@ -40,6 +41,7 @@ Add/remove Frontend User to Group
    **fe_groups** -> TSconfig
    **be_users** -> TSconfig
    **be_groups** -> TSconfig
+
 
 
 
