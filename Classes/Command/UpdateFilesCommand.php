@@ -1,223 +1,338 @@
 <?php
-namespace Jvelletti\JveUpgradewizard\Command;
+declare(strict_types=1);
 
-use Jvelletti\JveUpgradewizard\Utility\IncludeFilesUtility;
-use Symfony\Component\Console\Input\InputOption;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Core\Environment;
-use TYPO3\CMS\Core\Exception;
+namespace Jvelletti\JveUpgradewizard\Upgrades;
+
+use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
+use TYPO3\CMS\Core\Registry;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Install\Attribute\UpgradeWizard;
+use TYPO3\CMS\Install\Updates\RepeatableInterface;
+use TYPO3\CMS\Install\Updates\UpgradeWizardInterface;
 
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
+#[UpgradeWizard('jveUpgradewizard_upgradeTemplates')]
+final class UpgradeTemplatesWizard implements UpgradeWizardInterface , RepeatableInterface
+{
 
-/**
- * Class UpdateFilesCommand
- * @author Jörg Velletti <typo3@velletti.de>
- * @package JVE\JvEvents\Command
- */
-class UpdateFilesCommand extends Command {
+    public int $verboseLevel = 0 ;
+    public bool $error = false ;
+    public ?array $currentTemplate = [] ;
+    public ?array $currentPage = [] ;
 
-
+    public array $TSconfigs = [ 'be_groups' => 'title' , 'be_users' => "username" ,
+        'fe_groups' => 'title', 'fe_users' => "name",
+        'pages'  => 'title' ] ;
 
     /**
-     * Configure the command by defining the name, options and arguments
+     * Return the speaking name of this wizard
      */
-    protected function configure()
+    public function getTitle(): string
     {
-        $this->setDescription('Fix included template scripts or TS config files on local dev in given folder')
-            ->setHelp('Get list of Options: .' . LF . 'use the --help option.')
-            ->addOption(
-                'path',
-                'p',
-                InputOption::VALUE_OPTIONAL,
-                "local path to a template folder, that should be updated, starting from project root. \n
-                --path=/vendor/your-vendor/your-extension/Configuration/TypoScript/\n
-                f.e.: --path=/vendor/jvelletti/jve-upgradewizard/Configuration/TypoScript/
-                \n"
-            ) ;
-
+        return 'Fix known issues when upgrading to LTS 12';
     }
 
     /**
-     * Executes the current command.
-     *
-     * This method is not abstract because you can use this class
-     * as a concrete class. In this case, instead of defining the
-     * execute() method, you set the code to execute by passing
-     * a Closure to the setCode() method.
-     *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int 0 if everything went fine, or an exit code
-     *
-     * @see setCode()
+     * Return the description for this wizard
      */
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    public function getDescription(): string
     {
-        $io = new SymfonyStyle($input, $output);
-        $io->title($this->getDescription());
-
-        // Check if it's not running from the command line
-        if (PHP_SAPI !== 'cli') {
-            $io->writeln(  "\nThis script must be run from the command-line interface.\n "  );
-            return 0;
-        }
-        $basePath = rtrim( Environment::getProjectPath() , "/" ) . "/";
-
-
-
-        $path = '' ;
-        if ($input->getOption('path')) {
-            $path = trim( trim($input->getOption('path') ), "/" ) ;
-        }
-        if (!is_dir( $root . $path)) {
-            $io->writeln(  "\nThe Given Path is not accessable: "  .$root  . $path );
-            return 0;
-        }
-
-        if ( $path == '' ) {
-            $io->writeln(  "\n................................... "  );
-            $io->writeln(  "Enter the path to TypoScript folder "  );
-            $io->writeln(  "Must be a subfolder of: "  .$root   );
-            $handle = fopen ("php://stdin","r");
-
-            // remove spaces and "/" at beginning and end of input path
-            $path = trim( trim(fgets($handle) ), "/" ) ;
-            fclose($handle);
-        }
-        if (!is_dir( $basePath . $path)) {
-            $io->writeln(  "\nThe Given Path is not accessable: "  .$basePath . $path );
-            return 0;
-        }
-        if( $io->getVerbosity() > 32 ) {
-            $io->writeln("The Given Path is: " . $basePath . $path);
-        }
-
-        $files = self::getFiles( $path , $io, $basePath   ) ;
-        $io->writeln(  " " );
-
-        $total = count($files ) ;
-        $renamedFiles = 0 ;
-        $changedFiles = 0 ;
-        if ( $files && count($files ) > 0  ) {
-            $io->writeln(  " Files: " . $total . "\n");
-
-            $io->writeln(  "\n................................... "  );
-            $io->writeln(  "Are you shure you want to fix the  TypoScript folder?"  );
-            if ( $total > 3 ) {
-                $io->writeln(  "WARNING: Found " . $total . " Files to work on !!! "  );
-            }
-            $io->writeln(  "yes / [no]  "  );
-            $handle = fopen ("php://stdin","r");
-
-            // remove spaces and "/" at beginning and end of input path
-            $confirmed  =  strtolower( trim(fgets($handle) ) )  == "yes" ;
-            fclose($handle);
-
-            if ( !$confirmed ) {
-                $io->writeln(  "\n................................... "  );
-                $io->writeln(  "stopped be answer was not: yes"  );
-                $io->writeln(  "\n................................... "  );
-                return 0;
-            }
-            $progress = $io->createProgressBar($total) ;
-
-            foreach ( $files as $file ) {
-                if( IncludeFilesUtility::FixFileContent( $file , $io, $basePath  )) {
-                    $changedFiles ++ ;
-                    $io->writeln(   "\n Repaired File: " . str_replace( $basePath , "/" , $file )  . "" ) ;
-                }
-
-                $renamedFiles += self::renameFile($file , $io, $basePath );
-
-                $progress->advance();
-            }
-            // @extensionScannerIgnoreLine
-            $progress->finish();
-        }
-
-
-
-
-        $io->writeln(  " " );
-        return 0 ;
-    }
-
-
-    public static function getFiles(string $templatePath , SymfonyStyle $io, string $basePath  ): array
-    {
-        $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($basePath . $templatePath ));
-        $files = [];
-
-        foreach ($rii as $file) {
-
-
-            if (!$file->isDir()) {
-
-                $info = pathinfo($file);
-                $extension = isset($info['extension']) ? strtolower($info['extension']) : '';
-
-                // Check if file has one of the specified extensions
-                if (in_array($extension, IncludeFilesUtility::UNWANTED_EXTENSIONS ) || $extension == strtolower(IncludeFilesUtility::WANTED_EXTENSION) ) {
-                    $files[] = $file->getPathname();
-                    if( $io->getVerbosity() > 32 ) {
-                        $io->writeln(" Add to queue: " .str_replace( $basePath , "/" ,  $file->getPathname()) ) ;
-                    }
-                } else {
-                    if( $io->getVerbosity() > 32 ) {
-                        $io->writeln(" Extension needs no change: " .  str_replace( $basePath , "/" ,  $file->getPathname()) );
-                    }
-                }
-            } else {
-                if( $io->getVerbosity() > 32 ) {
-                    if( substr( $file , -2 , 2 ) != "..") {
-                        $io->writeln(" Dir: " . str_replace( $basePath , "/" ,  $file->getPathname()) );
-                    }
-                }
-            }
-        }
-
-        return $files;
+        return 'Change import syntax of typoscript / TSconfig and rename files extension to .typoscript';
     }
 
     /**
-     * rename typoscript files with Old Extension names like .ts  to .typoscript
+     * Execute the update of configured database tables and columns
      *
-     * @param string $filePath
-     * @return int
+     * Called when a wizard reports that an update is necessary
+     * remove sys_registry entry
      */
-    public static function renameFile(string $filePath , SymfonyStyle $io, string $basePath): int
+    public function executeUpdate(): bool
     {
-        // Check if file exists
-        if (!file_exists( $filePath)) {
-            return 0 ;
+        $this->verboseLevel = 16 ;
+
+        if ( isset( $_SERVER['argv'][3]) ) {
+            if (  $_SERVER['argv'][3] =="--no" ) {
+                $this->verboseLevel = 0 ;
+            }
+            if (  $_SERVER['argv'][3] =="-vv" ) {
+                $this->verboseLevel = 64 ;
+            }
+            if (  $_SERVER['argv'][3] =="-vvv" ) {
+                $this->verboseLevel = 128 ;
+            }
+        };
+
+        $startTime = time()   ;
+
+        $objects = $this->getTemplates( ) ;
+        $totalChanged = 0 ;
+        $totalObjCount = 0 ;
+
+        $changed = 0 ;
+        $objCount = 0 ;
+        $this->error = false ;
+        $this->debugOutput( 0 ,  "  -----  typoscript in templates config and constants ---- " ) ;
+        while ( $currentTemplate = $objects->fetchAssociative() ) {
+            $this->currentTemplate = $currentTemplate ;
+
+            try {
+                $changed = $changed + $this->checkTemplate( $this->currentTemplate ) ;
+                $objCount ++ ;
+            } catch ( \Exception $e )  {
+                $this->debugOutput( 0 ,  $e->getFile() . " - Line: " .  $e->getLine() .   $e->getMessage() ) ;
+                $this->error = true ;
+            }
         }
+        $this->debugOutput( 15 ,  "Changed  " . $changed . " of ". $objCount . " Templates in database "  ) ;
 
-        $info = pathinfo($filePath);
-        $extension = isset($info['extension']) ? strtolower($info['extension']) : '';
 
-        // Check if file has one of the specified extensions
-        if (in_array($extension, IncludeFilesUtility::UNWANTED_EXTENSIONS )) {
-            $newFilePath = $info['dirname'] . DIRECTORY_SEPARATOR . $info['filename'] . '.' . IncludeFilesUtility::WANTED_EXTENSION ;
+        foreach ( $this->TSconfigs as $TSconfigTable => $titleField ) {
+            $this->debugOutput( 0 ,  " " ) ;
+            $this->debugOutput( 0 ,  "  -----  TSconfig in " . $TSconfigTable . " ---- " ) ;
+            $objects = $this->getRows( $TSconfigTable , $titleField) ;
 
-            if ( $newFilePath !== $filePath ) {
+            $changed = 0 ;
+            $objCount = 0 ;
 
-                if (rename($filePath, $newFilePath)) {
-                    if( $io->getVerbosity() > 16 ) {
-                        $io->writeln("\n Renamed to: " . str_replace( $basePath , "/" ,  $newFilePath ) );
-                    }
-                    return 1 ;
-                } else {
-                    $io->writeln("\n Failed to rename file: " . str_replace( $basePath , "/" ,  $filePath ) );
-                    return 0 ;
+            while ( $currentPage = $objects->fetchAssociative() ) {
+                $this->currentPage = $currentPage ;
+                try {
+                    $changed = $changed + $this->checkRow( $this->currentPage , $TSconfigTable , $titleField) ;
+                    $objCount ++ ;
+                } catch ( \Exception $e )  {
+                    $this->debugOutput( 0 ,  $e->getFile() . " - Line: " .  $e->getLine() .   $e->getMessage() ) ;
+                    $this->error = true ;
                 }
             }
+            $totalChanged += $changed ;
+            $totalObjCount += $objCount ;
+
+            $this->debugOutput( 15 ,  "Changed  " . $changed . " of ". $objCount . " rows in Table: '" . $TSconfigTable . "' "  ) ;
+        }
+
+
+        $this->debugOutput( 0 ,  "" ) ;
+        $this->debugOutput( 15 , '---------------------------------------------------' ) ;
+        $this->debugOutput( 15 ,  "Total Changed  " . $totalChanged . " of ". $totalObjCount . " | Done in " . date( "H:i:s" , time() - $startTime ) . " (HH:mm:ss) "  ) ;
+        $this->debugOutput( 0 ,  "---------------------------------------------------" ) ;
+        $this->debugOutput( 0 ,  "" ) ;
+
+        if ( !$this->error ) {
+            $registry = GeneralUtility::makeInstance(Registry::class);
+            $registry->set('installUpdate', 'Jvelletti\JveUpgradewizard\Upgrades\UpgradeTemplatesWizard', 1 );
+        }
+        return ! $this->error ;
+    }
+
+
+
+
+
+    private function checkTemplate($template ) {
+        $configLines = GeneralUtility::trimExplode("\n" , $template['config'] ) ;
+        $this->debugOutput( 0 ,  "Template " . $template['uid'] . " on pid: "  . $template['pid'] . " " .  $template['title']) ;
+        $this->debugOutput( 0 ,  "" ) ;
+        $configLinesNew= '' ;
+        $constantsLinesNew = '' ;
+        if ( $configLines ) {
+
+            foreach ($configLines as $line ) {
+                if( trim(  $line )  != '' ) {
+                    $this->debugOutput( 123 ,  "Line: " . $line ) ;
+                    $line = $this->fixINCLUDE( $line ) ;
+                }
+
+                $configLinesNew .= $line . "\n" ;
+            }
+        }
+
+        $constantsLines = GeneralUtility::trimExplode("\n" , $template['constants'] ) ;
+        if ( $constantsLines ) {
+            foreach ($constantsLines as $line ) {
+                $this->debugOutput( 123 ,  "Line: " . $line ) ;
+                $line = $this->fixINCLUDE( $line ) ;
+
+                $constantsLinesNew .= $line . "\n" ;
+            }
+        }
+        $configLinesNew = trim( $configLinesNew , "\n") ;
+        $constantsLinesNew = trim( $constantsLinesNew , "\n") ;
+
+        if (  $template['config'] != $configLinesNew ||  $template['constants'] != $constantsLinesNew ) {
+            $template['config'] = $configLinesNew ;
+            $template['constants'] = $constantsLinesNew ;
+            return $this->updateTemplate($template) ;
         }
         return 0 ;
+
     }
 
+
+
+    private function checkRow($row , $titleField ) {
+        $configLines = GeneralUtility::trimExplode("\n" , $row['TSconfig'] ) ;
+        $configLinesNew= '' ;
+        if ( $configLines && count( $configLines) > 0 && trim($configLines[0]) != ''  ) {
+            $this->debugOutput( 0 ,  "TSconfig " . $row['uid'] . " on pid: "  . $row['pid'] . " " .  $row[$titleField]) ;
+            $this->debugOutput( 0 ,  "" ) ;
+
+
+            foreach ($configLines as $line ) {
+                if( trim(  $line )  != '' ) {
+                    $this->debugOutput(123, "Line: " . $line);
+                    $line = $this->fixINCLUDE($line);
+                }
+
+                $configLinesNew .= $line . "\n" ;
+            }
+        }
+        $configLinesNew = trim( $configLinesNew , "\n") ;
+
+        if (  $row['TSconfig']  != $configLinesNew  ) {
+            $row['TSconfig'] = $configLinesNew ;
+            return $this->updateRow($row , $titleField) ;
+        }
+        return 0 ;
+
+    }
+
+
+    private function fixINCLUDE($line) {
+        $isComment = '' ;
+        if ( str_starts_with(trim($line), "#") || str_starts_with(trim($line), "/")) {
+            $isComment = '# ' ;
+        }
+        if ( strpos( strtoupper($line) , "INCLUDE_TYPOSCRIPT") > 0 ||  strpos( strtolower( $line ), "@import") > -1 ) {
+            $line = trim( $line) ;
+            $this->debugOutput( 123 ,  "has INCLUDE_TYPOSCRIPT or  @import " ) ;
+            $line = str_replace('"', "'", $line);
+        } else {
+            return $line ;
+        }
+        $temp = GeneralUtility::trimExplode( "'" , $line ) ;
+        $result =  $line ;
+        if (count($temp) > 1 ) {
+
+            $file = str_replace( ["/typo3conf/ext/" , "typo3conf/ext/","/EXT:" , "FILE:EXT:"] , ["EXT:", "EXT:", "EXT:", "EXT:" ] , $temp[1] ) ;
+
+            $file = ltrim( $file , "\\") ;
+            $from =  [".ts" , ".txt" , ".text"] ;
+            $to = array_fill( 0 , count($from) ,'.typoscript' ) ;
+
+            $fileNew = str_replace($from , $to , $file ) ;
+            $result = $isComment . "@import '" . $fileNew . "'" ;
+            if ( $fileNew != $file ) {
+                $this->debugOutput( 0 ,  "MAYBE You need to rename File ENDING to .typoscript of :\n " . $fileNew  . " \n " ) ;
+                $this->error = true ;
+            }
+            if ( strpos( $result , "fileadmin/") > 0 ) {
+                if (  $isComment === '' ) {
+                    $this->error = true ;
+                    $this->debugOutput( 0 ,  " WARNING !! Typoscript Files in /fileadmin does not work anymore!!! :\n " . $fileNew  . " \n " ) ;
+                } else {
+                    $this->debugOutput( 0 ,  " one unused include of Typoscript Files in /fileadmin :\n " . $fileNew  . " \n " ) ;
+                }
+            }
+        }
+        return $result ;
+    }
+
+    private function getTemplates() {
+        /** @var ConnectionPool $connectionPool */
+        $connectionPool = GeneralUtility::makeInstance( "TYPO3\\CMS\\Core\\Database\\ConnectionPool");
+        $queryBuilder = $connectionPool->getConnectionForTable('sys_template')->createQueryBuilder();
+        $queryBuilder->getRestrictions()->removeAll()->add( GeneralUtility::makeInstance(DeletedRestriction::class));
+        $queryBuilder->select('uid', 'pid' , 'title','constants' , 'config' ) ->from('sys_template') ;
+        return $queryBuilder->executeQuery() ;
+    }
+
+    private function updateTemplate( $data ) {
+        /** @var ConnectionPool $connectionPool */
+        $connectionPool = GeneralUtility::makeInstance( "TYPO3\\CMS\\Core\\Database\\ConnectionPool");
+        $queryBuilder = $connectionPool->getConnectionForTable('sys_template')->createQueryBuilder();
+        $queryBuilder->getRestrictions()->removeAll()->add( GeneralUtility::makeInstance(DeletedRestriction::class));
+        $queryBuilder->update('sys_template')
+            ->set( "config" ,  $data['config'])
+            ->set( "constants" ,  $data['constants'])
+        ;
+
+        $expr = $queryBuilder->expr();
+        $queryBuilder->where( $expr->eq('uid', $data['uid'] )) ;
+        return $queryBuilder->executeStatement() ;
+    }
+
+
+    private function getRows( $table , $title ) {
+        /** @var ConnectionPool $connectionPool */
+        $connectionPool = GeneralUtility::makeInstance( "TYPO3\\CMS\\Core\\Database\\ConnectionPool");
+        $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
+        $expr = $queryBuilder->expr();
+        $queryBuilder->getRestrictions()->removeAll()->add( GeneralUtility::makeInstance(DeletedRestriction::class));
+        $queryBuilder->select('uid', 'pid' , $title ,'TSconfig'  ) ->from($table)
+            ->where( $expr->neq('TSconfig' , $queryBuilder->createNamedParameter('' ) ))
+            ->andWhere( $expr->isNotNull('TSconfig')) ;
+
+        return $queryBuilder->executeQuery() ;
+    }
+
+    private function updateRow( $data , $table ) {
+        /** @var ConnectionPool $connectionPool */
+        $connectionPool = GeneralUtility::makeInstance( "TYPO3\\CMS\\Core\\Database\\ConnectionPool");
+        $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
+        $queryBuilder->getRestrictions()->removeAll()->add( GeneralUtility::makeInstance(DeletedRestriction::class));
+        $expr = $queryBuilder->expr();
+        $queryBuilder->update($table)
+            ->set( "TSconfig" ,  $data['TSconfig'])
+            ->where( $expr->eq('uid', $data['uid'] )) ;
+
+        return $queryBuilder->executeStatement() ;
+    }
+
+
+
+    private function debugOutput( $minVerbosity , $text ) {
+        if ( $this->verboseLevel > $minVerbosity  ) {
+            echo "\n" . $text ;
+        }
+    }
+
+
+    /**
+     * Is an update necessary?
+     *
+     * Is used to determine whether a wizard needs to be run.
+     * Check if data for migration exists.
+     *
+     * @return bool Whether an update is required (TRUE) or not (FALSE)
+     */
+    public function updateNecessary(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Returns an array of class names of prerequisite classes
+     *
+     * This way a wizard can define dependencies like "database up-to-date" or
+     * "reference index updated"
+     *
+     * @return string[]
+     */
+    public function getPrerequisites(): array
+    {
+        return ['database up-to-date' , 'reference index updated'] ;
+    }
+
+
+    /**
+     * Return the identifier for this wizard
+     * This should be the same string as used in the ext_localconf class registration
+     *
+     * @return string
+     */
+    public function getIdentifier(): string
+    {
+        return 'jveUpgradewizard_upgradeTemplates' ;
+    }
 }

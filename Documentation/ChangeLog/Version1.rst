@@ -14,6 +14,7 @@ ChangeLog
 For details have a look at the Github commits:
 https://github.com/velletti/jve_upgradewizard/commits/main
 
+12.4.10 - fix error on PHP8.1 (and did more test in real Live instances)
 12.4.8 - Update only documentation and point in rst file to readme.md
 12.4.7 - add a console command to rename and fix local typoscipt and tsconfig files
          console command is not planned for production. use it only on lcal dev mashine
