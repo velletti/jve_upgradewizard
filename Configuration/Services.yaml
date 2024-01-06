@@ -6,8 +6,3 @@ services:
   Jvelletti\JveUpgradewizard\:
     resource: '../Classes/*'
 
-  Jvelletti\JveUpgradewizard\Command\UpdateFilesCommand:
-    tags:
-      - name: 'console.command'
-        command: 'jvelletti:updatefiles'
-        schedulable: true
