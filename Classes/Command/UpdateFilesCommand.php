@@ -12,8 +12,7 @@ use TYPO3\CMS\Install\Attribute\UpgradeWizard;
 use TYPO3\CMS\Install\Updates\RepeatableInterface;
 use TYPO3\CMS\Install\Updates\UpgradeWizardInterface;
 
-#[UpgradeWizard('jveUpgradewizard_upgradeTemplates')]
-final class UpgradeTemplatesWizard implements UpgradeWizardInterface , RepeatableInterface
+final class UpdateFilesCommand
 {
 
     public int $verboseLevel = 0 ;
