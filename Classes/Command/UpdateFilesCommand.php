@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Jvelletti\JveUpgradewizard\Upgrades;
+namespace Jvelletti\JveUpgradewizard\Command;
 
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Database\ConnectionPool;
