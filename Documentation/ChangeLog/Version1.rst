@@ -14,6 +14,7 @@ ChangeLog
 For details have a look at the Github commits:
 https://github.com/velletti/jve_upgradewizard/commits/main
 
+12.4.13 - fix namespace in updateFilesCommand
 12.4.12 - Class name updateFilesCommand
 12.4.11 - correct version Number in ext_emconf.php for TER
 12.4.10 - fix error on PHP8.1 (and did more test in real Live instances)
