@@ -22,8 +22,8 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
     public ?array $currentPage = [] ;
 
     public array $TSconfigs = [ 'be_groups' => 'title' , 'be_users' => "username" ,
-                                'fe_groups' => 'title', 'fe_users' => "name",
-                                'pages'  => 'title' ] ;
+        'fe_groups' => 'title', 'fe_users' => "name",
+        'pages'  => 'title' ] ;
 
     /**
      * Return the speaking name of this wizard
@@ -73,7 +73,9 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
         $objCount = 0 ;
         $this->error = false ;
         $this->debugOutput( 0 ,  "  -----  typoscript in templates config and constants ---- " ) ;
-        while ( $this->currentTemplate = $objects->fetchAssociative() ) {
+        while ( $currentTemplate = $objects->fetchAssociative() ) {
+            $this->currentTemplate = $currentTemplate ;
+
             try {
                 $changed = $changed + $this->checkTemplate( $this->currentTemplate ) ;
                 $objCount ++ ;
@@ -93,7 +95,8 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             $changed = 0 ;
             $objCount = 0 ;
 
-            while ( $this->currentPage = $objects->fetchAssociative() ) {
+            while ( $currentPage = $objects->fetchAssociative() ) {
+                $this->currentPage = $currentPage ;
                 try {
                     $changed = $changed + $this->checkRow( $this->currentPage , $TSconfigTable , $titleField) ;
                     $objCount ++ ;
