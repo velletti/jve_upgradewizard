@@ -166,7 +166,7 @@ cd vendor/jvelletti/jve-upgradewizard \
 git archive -o "jve_upgradewizard_x.y.z.zip" HEAD 
 
 f.e.: \
-git archive -o "jve_upgradewizard_12.4.9.zip" HEAD 
+git archive -o "jve_upgradewizard_12.4.11.zip" HEAD 
 
 
 Upload ZIP File to https://extensions.typo3.org/my-extensions \
