@@ -86,6 +86,8 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
         }
         $this->debugOutput( 15 ,  "Changed  " . $changed . " of ". $objCount . " Templates in database "  ) ;
 
+        $totalChanged += $changed ;
+        $totalObjCount += $objCount ;
 
         foreach ( $this->TSconfigs as $TSconfigTable => $titleField ) {
             $this->debugOutput( 0 ,  " " ) ;
@@ -203,7 +205,8 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
         if ( str_starts_with(trim($line), "#") || str_starts_with(trim($line), "/")) {
             $isComment = '# ' ;
         }
-        if ( strpos( strtoupper($line) , "INCLUDE_TYPOSCRIPT") > 0 ||  strpos( strtolower( $line ), "@import") > -1 ) {
+        if ( strpos( strtoupper($line) , "INCLUDE_TYPOSCRIPT") > 0
+            ||  strpos( strtolower( $line ), "@import") > -1 ) {
             $line = trim( $line) ;
             $this->debugOutput( 123 ,  "has INCLUDE_TYPOSCRIPT or  @import " ) ;
             $line = str_replace('"', "'", $line);
@@ -214,17 +217,16 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
         $result =  $line ;
         if (count($temp) > 1 ) {
 
-            $file = str_replace( ["/typo3conf/ext/" , "typo3conf/ext/","/EXT:" , "FILE:EXT:"] , ["EXT:", "EXT:", "EXT:", "EXT:" ] , $temp[1] ) ;
+            $file = str_replace( ["/typo3conf/ext/" , "typo3conf/ext/","/EXT:" , "FILE:EXT:" , "FILE: EXT:"] , ["EXT:", "EXT:", "EXT:", "EXT:" , "EXT:" ] , $temp[1] ) ;
 
             $file = ltrim( $file , "\\") ;
-            $from =  [".ts" , ".txt" , ".text"] ;
+            $from =  [".ts" , ".txt" , ".text" , ".t3s" , ".t3"] ;
             $to = array_fill( 0 , count($from) ,'.typoscript' ) ;
 
             $fileNew = str_replace($from , $to , $file ) ;
             $result = $isComment . "@import '" . $fileNew . "'" ;
             if ( $fileNew != $file ) {
                 $this->debugOutput( 0 ,  "MAYBE You need to rename File ENDING to .typoscript of :\n " . $fileNew  . " \n " ) ;
-                $this->error = true ;
             }
             if ( strpos( $result , "fileadmin/") > 0 ) {
                 if (  $isComment === '' ) {
