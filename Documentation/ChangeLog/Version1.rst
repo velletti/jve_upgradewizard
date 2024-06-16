@@ -14,7 +14,10 @@ ChangeLog
 For details have a look at the Github commits:
 https://github.com/velletti/jve_upgradewizard/commits/main
 
-12.4.15 - readd updateFilesCommand
+12.4.18 - repair also includeCss and includeJs and icons / logos
+12.4.17 - repair also FILE: EXT:
+12.4.16 - minor cahnges
+12.4.15 - re added updateFilesCommand
 12.4.14 - remove unfinished updateFilesCommand as exists in ssch typo3 rector
 12.4.13 - fix namespace in updateFilesCommand
 12.4.12 - Class name updateFilesCommand

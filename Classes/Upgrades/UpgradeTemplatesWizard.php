@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Jvelletti\JveUpgradewizard\Upgrades;
 
+use Jvelletti\JveUpgradewizard\Utility\IncludeFilesUtility;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
@@ -206,9 +207,13 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             $isComment = '# ' ;
         }
         if ( strpos( strtoupper($line) , "INCLUDE_TYPOSCRIPT") > 0
-            ||  strpos( strtolower( $line ), "@import") > -1 ) {
+            ||  strpos( strtolower( $line ), "@import") > -1
+            ||  str_ends_with( trim(strtolower( $line )) , ".js")
+            ||  str_ends_with( trim(strtolower( $line )) , ".css")
+           )
+        {
             $line = trim( $line) ;
-            $this->debugOutput( 123 ,  "has INCLUDE_TYPOSCRIPT or  @import " ) ;
+            $this->debugOutput( 123 ,  "has INCLUDE_TYPOSCRIPT or  @import or .js or .css " ) ;
             $line = str_replace('"', "'", $line);
         } else {
             return $line ;
@@ -220,8 +225,10 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             $file = str_replace( ["/typo3conf/ext/" , "typo3conf/ext/","/EXT:" , "FILE:EXT:" , "FILE: EXT:"] , ["EXT:", "EXT:", "EXT:", "EXT:" , "EXT:" ] , $temp[1] ) ;
 
             $file = ltrim( $file , "\\") ;
-            $from =  [".ts" , ".txt" , ".text" , ".t3s" , ".t3"] ;
-            $to = array_fill( 0 , count($from) ,'.typoscript' ) ;
+            foreach ( IncludeFilesUtility::UNWANTED_EXTENSIONS as $unwanted ) {
+                $from[] = "." . $unwanted ;
+            }
+            $to = array_fill( 0 , count($from) , "." . IncludeFilesUtility::WANTED_EXTENSION ) ;
 
             $fileNew = str_replace($from , $to , $file ) ;
             $result = $isComment . "@import '" . $fileNew . "'" ;

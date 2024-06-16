@@ -2,10 +2,11 @@
 # what does extension do
 ========================
 
-Version 12.5.9 | 22.9.2023 
+Version 12.4.18 | 16.6.2024 
 
-Tested with TYPO3 LTS 12.4.6 undter PHP 8.1 \
-Tested with TYPO3 LTS 11.4.31 undter PHP 7.4 \
+Tested with TYPO3 LTS 12.4.16 under PHP 8.3 \
+Tested with TYPO3 LTS 12.4.6 under PHP 8.1 \
+Tested with TYPO3 LTS 11.4.31 under PHP 7.4 \
 
 works on following database tables / fields:  \
 
@@ -36,6 +37,7 @@ to
 4. you should have experience to cun typo3 console command 
 5. you should work with any vcs like git 
 6. make a copy of your template folder for easier testing 
+7. replace -vv against -vvv to get more verbose output in follwing commands
 
 
     ./vendor/bin/typo3 upgrade:run jveUpgradewizard_upgradeTemplates -vv
@@ -114,10 +116,18 @@ the Console command searches for all files with definied Endings :
 Renames these files if needed to ".typoscript" and fixes the content of this tiles in same way like database entries \
 lines without "@import" and "INCLUDE_TYPOSCRIPT" are unchanged \
 
+Fixes since version 12.4.18 also typocript lines :
+
+    page.includeJSFooter.main = /typo3conf/ext/ ... main.js
+    page.includeCss.application = /typo3conf/ext/ ... application.css
+    shortcutIcon = /typo3conf/ext/ .. icon.ico
+    logo = /typo3conf/ext/ .. logo.png ( .gif /  .jpg )
+
 
 ## Restrictions
 
-1.  does not fix entries in folder "/fileadmin" like  @import "/fileadmin/tscript.ts"
+1. does not fix entries in folder "/fileadmin" like  @import "/fileadmin/tscript.ts"
+2. does not fix CSS/javascript files itself, if background images or font path is loading from public folder of extension
 
 
 # Best pratices
