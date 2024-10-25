@@ -74,7 +74,8 @@ class UpdateFilesCommand extends Command {
         if ($input->getOption('path')) {
             $path = trim( trim($input->getOption('path') ), "/" ) ;
         }
-        if (!is_dir( $root . $path)) {
+        $path = str_replace( $basePath , "" , $path) ;
+        if (!is_dir( $basePath . $path)) {
             $io->writeln(  "\nThe Given Path is not accessable: "  .$root  . $path );
             return 0;
         }
@@ -82,7 +83,7 @@ class UpdateFilesCommand extends Command {
         if ( $path == '' ) {
             $io->writeln(  "\n................................... "  );
             $io->writeln(  "Enter the path to TypoScript folder "  );
-            $io->writeln(  "Must be a subfolder of: "  .$root   );
+            $io->writeln(  "Must be a subfolder of: "  .$basePath   );
             $handle = fopen ("php://stdin","r");
 
             // remove spaces and "/" at beginning and end of input path
