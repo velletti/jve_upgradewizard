@@ -10,4 +10,9 @@ services:
     tags:
       - name: 'console.command'
         command: 'jvelletti:updatefiles'
-        schedulable: true
+        schedulable: false
+  Jvelletti\JveUpgradewizard\Command\RepairPrimaryKeyCommand:
+    tags:
+      - name: 'console.command'
+        command: 'jvelletti:repairprimarykey'
+        schedulable: false
