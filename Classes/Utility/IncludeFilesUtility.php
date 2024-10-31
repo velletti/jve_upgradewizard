@@ -9,8 +9,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 final class IncludeFilesUtility
 {
 
-    CONST UNWANTED_EXTENSIONS = ['ts', 'txt', 'text' , 't3' , 't3s' , 'tscript' , 'tsconfig' ] ;
-    CONST WANTED_EXTENSION = 'typoscript' ;
+    CONST UNWANTED_EXTENSIONS = ['ts', 'txt', 'text' , 't3' , 't3s' , 'tscript' ] ;
+    CONST WANTED_EXTENSION = '.typoscript' ;
+    CONST TSCONFIG_EXTENSION = '.tsconfig' ;
     CONST UNWANTED_PATH = ["/typo3conf/ext/" , "typo3conf/ext/","/EXT:" , "FILE: EXT:" , "FILE:EXT:"] ;
 
     public static function FixFileContent($filePath , ?SymfonyStyle $io=null, string $basePath='' ) {

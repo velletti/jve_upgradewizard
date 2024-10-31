@@ -22,9 +22,18 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
     public ?array $currentTemplate = [] ;
     public ?array $currentPage = [] ;
 
-    public array $TSconfigs = [ 'be_groups' => 'title' , 'be_users' => "username" ,
-        'fe_groups' => 'title', 'fe_users' => "name",
-        'pages'  => 'title' ] ;
+    public array $TSconfigs = [
+        'be_groups' => 'title' ,
+        'be_users' => "username" ,
+        'fe_groups' => 'title',
+        'fe_users' => "name",
+        'pages'  => 'title'
+    ] ;
+
+    public array $otherConfig = [
+       'tx_gridelements_backend_layout' =>  ['field' => 'config' , 'extension' => '.typoscript' , 'title' => 'title' ] ,
+       'backend_layout' =>  ['field' => 'config' , 'extension' => '.typoscript' , 'title' => 'title' ] ,
+    ] ;
 
     /**
      * Return the speaking name of this wizard
@@ -85,14 +94,14 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
                 $this->error = true ;
             }
         }
-        $this->debugOutput( 15 ,  "Changed  " . $changed . " of ". $objCount . " Templates in database "  ) ;
+        $this->debugOutput( 31 ,  "Changed  " . $changed . " of ". $objCount . " Templates in database "  ) ;
 
         $totalChanged += $changed ;
         $totalObjCount += $objCount ;
 
         foreach ( $this->TSconfigs as $TSconfigTable => $titleField ) {
-            $this->debugOutput( 0 ,  " " ) ;
-            $this->debugOutput( 0 ,  "  -----  TSconfig in " . $TSconfigTable . " ---- " ) ;
+            $this->debugOutput( 31 ,  " " ) ;
+            $this->debugOutput( 31 ,  "  -----  TSconfig in " . $TSconfigTable . " ---- " ) ;
             $objects = $this->getRows( $TSconfigTable , $titleField) ;
 
             $changed = 0 ;
@@ -101,7 +110,7 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             while ( $currentPage = $objects->fetchAssociative() ) {
                 $this->currentPage = $currentPage ;
                 try {
-                    $changed = $changed + $this->checkRow( $this->currentPage , $TSconfigTable , $titleField) ;
+                    $changed = $changed + $this->checkRow( $this->currentPage , $TSconfigTable , $titleField , 'TSconfig'  , IncludeFilesUtility::TSCONFIG_EXTENSION) ;
                     $objCount ++ ;
                 } catch ( \Exception $e )  {
                     $this->debugOutput( 0 ,  $e->getFile() . " - Line: " .  $e->getLine() .   $e->getMessage() ) ;
@@ -111,7 +120,31 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             $totalChanged += $changed ;
             $totalObjCount += $objCount ;
 
-            $this->debugOutput( 15 ,  "Changed  " . $changed . " of ". $objCount . " rows in Table: '" . $TSconfigTable . "' "  ) ;
+            $this->debugOutput( 31 ,  "Changed  " . $changed . " of ". $objCount . " rows in Table: '" . $TSconfigTable . "' "  ) ;
+        }
+
+        foreach ( $this->otherConfig as $otherConfigTable => $otherConfigValues ) {
+            $this->debugOutput( 31 ,  " " ) ;
+            $this->debugOutput( 31 ,  "  -----  " .   $otherConfigValues['field']  . "  in " . $otherConfigTable . " ---- " ) ;
+            $objects = $this->getRows( $otherConfigTable , $otherConfigValues['title'] , $otherConfigValues['field'] ) ;
+
+            $changed = 0 ;
+            $objCount = 0 ;
+
+            while ( $currentPage = $objects->fetchAssociative() ) {
+                $this->currentPage = $currentPage ;
+                try {
+                    $changed = $changed + $this->checkRow( $this->currentPage , $otherConfigTable ,  $otherConfigValues['title'] , $otherConfigValues['field'] , $otherConfigValues['extension']) ;
+                    $objCount ++ ;
+                } catch ( \Exception $e )  {
+                    $this->debugOutput( 0 ,  $e->getFile() . " - Line: " .  $e->getLine() .   $e->getMessage() ) ;
+                    $this->error = true ;
+                }
+            }
+            $totalChanged += $changed ;
+            $totalObjCount += $objCount ;
+
+            $this->debugOutput( 31 ,  "Changed  " . $changed . " of ". $objCount . " rows in Table: '" . $TSconfigTable . "' "  ) ;
         }
 
 
@@ -134,8 +167,8 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
 
     private function checkTemplate($template ) {
         $configLines = GeneralUtility::trimExplode("\n" , $template['config'] ) ;
-        $this->debugOutput( 0 ,  "Template " . $template['uid'] . " on pid: "  . $template['pid'] . " " .  $template['title']) ;
-        $this->debugOutput( 0 ,  "" ) ;
+        $this->debugOutput( 31 ,  "Template " . $template['uid'] . " on pid: "  . $template['pid'] . " " .  $template['title']) ;
+        $this->debugOutput( 31 ,  "" ) ;
         $configLinesNew= '' ;
         $constantsLinesNew = '' ;
         if ( $configLines ) {
@@ -143,7 +176,7 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             foreach ($configLines as $line ) {
                 if( trim(  $line )  != '' ) {
                     $this->debugOutput( 123 ,  "Line: " . $line ) ;
-                    $line = $this->fixINCLUDE( $line ) ;
+                    $line = $this->fixINCLUDE( $line , IncludeFilesUtility::WANTED_EXTENSION) ;
                 }
 
                 $configLinesNew .= $line . "\n" ;
@@ -173,18 +206,18 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
 
 
 
-    private function checkRow($row , $titleField ) {
-        $configLines = GeneralUtility::trimExplode("\n" , $row['TSconfig'] ) ;
+    private function checkRow($row , $TSconfigTable , $titleField , $valueField , $wantedExtension) {
+        $configLines = GeneralUtility::trimExplode("\n" , $row[$valueField] ) ;
         $configLinesNew= '' ;
         if ( $configLines && count( $configLines) > 0 && trim($configLines[0]) != ''  ) {
-            $this->debugOutput( 0 ,  "TSconfig " . $row['uid'] . " on pid: "  . $row['pid'] . " " .  $row[$titleField]) ;
-            $this->debugOutput( 0 ,  "" ) ;
+            $this->debugOutput( 31 ,  $valueField . " " . $row['uid'] . " on pid: "  . $row['pid'] . " " .  $row[$titleField]) ;
+            $this->debugOutput( 31 ,  "" ) ;
 
 
             foreach ($configLines as $line ) {
                 if( trim(  $line )  != '' ) {
                     $this->debugOutput(123, "Line: " . $line);
-                    $line = $this->fixINCLUDE($line);
+                    $line = $this->fixINCLUDE($line , $wantedExtension) ;
                 }
 
                 $configLinesNew .= $line . "\n" ;
@@ -192,16 +225,16 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
         }
         $configLinesNew = trim( $configLinesNew , "\n") ;
 
-        if (  $row['TSconfig']  != $configLinesNew  ) {
-            $row['TSconfig'] = $configLinesNew ;
-            return $this->updateRow($row , $titleField) ;
+        if (  $row[$valueField]  != $configLinesNew  ) {
+            $row[$valueField] = $configLinesNew ;
+            return $this->updateRow($row , $TSconfigTable , $valueField) ;
         }
         return 0 ;
 
     }
 
 
-    private function fixINCLUDE($line) {
+    private function fixINCLUDE($line , $wantedExtension= IncludeFilesUtility::WANTED_EXTENSION ) {
         $isComment = '' ;
         if ( str_starts_with(trim($line), "#") || str_starts_with(trim($line), "/")) {
             $isComment = '# ' ;
@@ -228,19 +261,20 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             foreach ( IncludeFilesUtility::UNWANTED_EXTENSIONS as $unwanted ) {
                 $from[] = "." . $unwanted ;
             }
-            $to = array_fill( 0 , count($from) , "." . IncludeFilesUtility::WANTED_EXTENSION ) ;
+
+            $to = array_fill( 0 , count($from) ,  $wantedExtension ) ;
 
             $fileNew = str_replace($from , $to , $file ) ;
             $result = $isComment . "@import '" . $fileNew . "'" ;
             if ( $fileNew != $file ) {
-                $this->debugOutput( 0 ,  "MAYBE You need to rename File ENDING to .typoscript of :\n " . $fileNew  . " \n " ) ;
+                $this->debugOutput( 0 ,  "MAYBE You need to rename File ENDING to " . $wantedExtension . " of :\n " . $fileNew  . " \n " ) ;
             }
             if ( strpos( $result , "fileadmin/") > 0 ) {
                 if (  $isComment === '' ) {
                     $this->error = true ;
                     $this->debugOutput( 0 ,  " WARNING !! Typoscript Files in /fileadmin does not work anymore!!! :\n " . $fileNew  . " \n " ) ;
                 } else {
-                    $this->debugOutput( 0 ,  " one unused include of Typoscript Files in /fileadmin :\n " . $fileNew  . " \n " ) ;
+                    $this->debugOutput( 125 ,  " one unused include of Typoscript Files in /fileadmin :\n " . $fileNew  . " \n " ) ;
                 }
             }
         }
@@ -272,27 +306,27 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
     }
 
 
-    private function getRows( $table , $title ) {
+    private function getRows( $table , $title , $field= 'TSconfig') {
         /** @var ConnectionPool $connectionPool */
         $connectionPool = GeneralUtility::makeInstance( "TYPO3\\CMS\\Core\\Database\\ConnectionPool");
         $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
         $expr = $queryBuilder->expr();
         $queryBuilder->getRestrictions()->removeAll()->add( GeneralUtility::makeInstance(DeletedRestriction::class));
-        $queryBuilder->select('uid', 'pid' , $title ,'TSconfig'  ) ->from($table)
-            ->where( $expr->neq('TSconfig' , $queryBuilder->createNamedParameter('' ) ))
-            ->andWhere( $expr->isNotNull('TSconfig')) ;
+        $queryBuilder->select('uid', 'pid' , $title ,$field ) ->from($table)
+            ->where( $expr->neq($field , $queryBuilder->createNamedParameter('' ) ))
+            ->andWhere( $expr->isNotNull($field)) ;
 
         return $queryBuilder->executeQuery() ;
     }
 
-    private function updateRow( $data , $table ) {
+    private function updateRow( $data , $table  , $field= 'TSconfig') {
         /** @var ConnectionPool $connectionPool */
         $connectionPool = GeneralUtility::makeInstance( "TYPO3\\CMS\\Core\\Database\\ConnectionPool");
         $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
         $queryBuilder->getRestrictions()->removeAll()->add( GeneralUtility::makeInstance(DeletedRestriction::class));
         $expr = $queryBuilder->expr();
         $queryBuilder->update($table)
-            ->set( "TSconfig" ,  $data['TSconfig'])
+            ->set( $field ,  $data[$field])
             ->where( $expr->eq('uid', $data['uid'] )) ;
 
         return $queryBuilder->executeStatement() ;
