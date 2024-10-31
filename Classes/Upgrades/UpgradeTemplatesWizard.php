@@ -103,7 +103,9 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             $this->debugOutput( 31 ,  " " ) ;
             $this->debugOutput( 31 ,  "  -----  TSconfig in " . $TSconfigTable . " ---- " ) ;
             $objects = $this->getRows( $TSconfigTable , $titleField) ;
-
+            if ( $objects  === null ) {
+                continue ;
+            }
             $changed = 0 ;
             $objCount = 0 ;
 
@@ -127,7 +129,9 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             $this->debugOutput( 31 ,  " " ) ;
             $this->debugOutput( 31 ,  "  -----  " .   $otherConfigValues['field']  . "  in " . $otherConfigTable . " ---- " ) ;
             $objects = $this->getRows( $otherConfigTable , $otherConfigValues['title'] , $otherConfigValues['field'] ) ;
-
+            if ( $objects  === null ) {
+                continue ;
+            }
             $changed = 0 ;
             $objCount = 0 ;
 
@@ -307,16 +311,24 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
 
 
     private function getRows( $table , $title , $field= 'TSconfig') {
-        /** @var ConnectionPool $connectionPool */
-        $connectionPool = GeneralUtility::makeInstance( "TYPO3\\CMS\\Core\\Database\\ConnectionPool");
-        $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
-        $expr = $queryBuilder->expr();
-        $queryBuilder->getRestrictions()->removeAll()->add( GeneralUtility::makeInstance(DeletedRestriction::class));
-        $queryBuilder->select('uid', 'pid' , $title ,$field ) ->from($table)
-            ->where( $expr->neq($field , $queryBuilder->createNamedParameter('' ) ))
-            ->andWhere( $expr->isNotNull($field)) ;
+        try {
 
-        return $queryBuilder->executeQuery() ;
+            /** @var ConnectionPool $connectionPool */
+            $connectionPool = GeneralUtility::makeInstance( "TYPO3\\CMS\\Core\\Database\\ConnectionPool");
+            $queryBuilder = $connectionPool->getConnectionForTable($table)->createQueryBuilder();
+            $expr = $queryBuilder->expr();
+            $queryBuilder->getRestrictions()->removeAll()->add( GeneralUtility::makeInstance(DeletedRestriction::class));
+            $queryBuilder->select('uid', 'pid' , $title ,$field ) ->from($table)
+               ->where( $expr->neq($field , $queryBuilder->createNamedParameter('' ) ))
+               ->andWhere( $expr->isNotNull($field)) ;
+
+            return $queryBuilder->executeQuery() ;
+
+
+        } catch ( \Exception $e ) {
+            // not all tables may exist in all instances f.e. gridelements backend Layouts
+           return null ;
+        }
     }
 
     private function updateRow( $data , $table  , $field= 'TSconfig') {
