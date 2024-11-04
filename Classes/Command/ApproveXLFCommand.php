@@ -19,7 +19,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * @author Jörg Velletti <typo3@velletti.de>
  * @package JVE\JvEvents\Command
  */
-class UpdateFilesCommand extends Command {
+class ApproveXLFCommand extends Command {
 
 
 
@@ -28,15 +28,15 @@ class UpdateFilesCommand extends Command {
      */
     protected function configure()
     {
-        $this->setDescription('Fix included template scripts or TS config files on local dev in given folder')
+        $this->setDescription('Sets approved = yes in XLF translation files on local dev in given folder')
             ->setHelp('Get list of Options: .' . LF . 'use the --help option.')
             ->addOption(
                 'path',
                 'p',
                 InputOption::VALUE_OPTIONAL,
-                "local path to a template folder, that should be updated, starting from project root. \n
-                --path=/vendor/your-vendor/your-extension/Configuration/TypoScript/\n
-                f.e.: --path=/vendor/jvelletti/jve-upgradewizard/Configuration/TypoScript/
+                "local path to an extension folder, that should be updated, starting from project root. \n
+                --path=/vendor/your-vendor/your-extension/\n
+                f.e.: --path=/vendor/jvelletti/jve-upgradewizard/
                 \n"
             ) ;
 
@@ -82,7 +82,7 @@ class UpdateFilesCommand extends Command {
 
         if ( $path == '' ) {
             $io->writeln(  "\n................................... "  );
-            $io->writeln(  "Enter the path to TypoScript folder "  );
+            $io->writeln(  "Enter the path to Extension folder "  );
             $io->writeln(  "Must be a subfolder of: "  .$basePath   );
             $handle = fopen ("php://stdin","r");
 
@@ -90,15 +90,15 @@ class UpdateFilesCommand extends Command {
             $path = trim( trim(fgets($handle) ), "/" ) ;
             fclose($handle);
         }
-        if (!is_dir( $basePath . $path)) {
+        if (!is_dir( $basePath . $path . "/Resources/Private/Language")) {
             $io->writeln(  "\nThe Given Path is not accessable: "  .$basePath . $path );
             return 0;
         }
         if( $io->getVerbosity() > 32 ) {
-            $io->writeln("The Given Path is: " . $basePath . $path);
+            $io->writeln("The Given Path is: " . $basePath . $path . "/Resources/Private/Language");
         }
 
-        $files = self::getFiles( $path , $io, $basePath   ) ;
+        $files = self::getFiles( $path . "/Resources/Private/Language" , $io, $basePath   ) ;
         $io->writeln(  " " );
 
         $total = count($files ) ;
@@ -108,7 +108,7 @@ class UpdateFilesCommand extends Command {
             $io->writeln(  " Files: " . $total . "\n");
 
             $io->writeln(  "\n................................... "  );
-            $io->writeln(  "Are you shure you want to fix the  TypoScript folder?"  );
+            $io->writeln(  "Are you shure you want to fix the Language folder?"  );
             if ( $total > 3 ) {
                 $io->writeln(  "WARNING: Found " . $total . " Files to work on !!! "  );
             }
@@ -128,12 +128,7 @@ class UpdateFilesCommand extends Command {
             $progress = $io->createProgressBar($total) ;
 
             foreach ( $files as $file ) {
-                if( IncludeFilesUtility::FixFileContent( $file , $io, $basePath  )) {
-                    $changedFiles ++ ;
-                    $io->writeln(   "\n Repaired File: " . str_replace( $basePath , "/" , $file )  . "" ) ;
-                }
-
-                $renamedFiles += self::renameFile($file , $io, $basePath );
+                self::repairFile($file , $io, $basePath );
 
                 $progress->advance();
             }
@@ -163,14 +158,10 @@ class UpdateFilesCommand extends Command {
                 $extension = isset($info['extension']) ? strtolower($info['extension']) : '';
 
                 // Check if file has one of the specified extensions
-                if (in_array($extension, IncludeFilesUtility::UNWANTED_EXTENSIONS ) || $extension == strtolower(IncludeFilesUtility::WANTED_EXTENSION) ) {
+                if ( $extension == "xlf" ) {
                     $files[] = $file->getPathname();
                     if( $io->getVerbosity() > 32 ) {
                         $io->writeln(" Add to queue: " .str_replace( $basePath , "/" ,  $file->getPathname()) ) ;
-                    }
-                } else {
-                    if( $io->getVerbosity() > 32 ) {
-                        $io->writeln(" Extension needs no change: " .  str_replace( $basePath , "/" ,  $file->getPathname()) );
                     }
                 }
             } else {
@@ -191,7 +182,7 @@ class UpdateFilesCommand extends Command {
      * @param string $filePath
      * @return int
      */
-    public static function renameFile(string $filePath , SymfonyStyle $io, string $basePath): int
+    public static function repairFile(string $filePath , SymfonyStyle $io, string $basePath): int
     {
         // Check if file exists
         if (!file_exists( $filePath)) {
@@ -199,25 +190,8 @@ class UpdateFilesCommand extends Command {
         }
 
         $info = pathinfo($filePath);
-        $extension = isset($info['extension']) ? strtolower($info['extension']) : '';
+        $io->writeln("\n Repair  " . $info  );
 
-        // Check if file has one of the specified extensions
-        if (in_array($extension, IncludeFilesUtility::UNWANTED_EXTENSIONS )) {
-            $newFilePath = $info['dirname'] . DIRECTORY_SEPARATOR . $info['filename'] . '.' . IncludeFilesUtility::WANTED_EXTENSION ;
-
-            if ( $newFilePath !== $filePath ) {
-
-                if (rename($filePath, $newFilePath)) {
-                    if( $io->getVerbosity() > 16 ) {
-                        $io->writeln("\n Renamed to: " . str_replace( $basePath , "/" ,  $newFilePath ) );
-                    }
-                    return 1 ;
-                } else {
-                    $io->writeln("\n Failed to rename file: " . str_replace( $basePath , "/" ,  $filePath ) );
-                    return 0 ;
-                }
-            }
-        }
         return 0 ;
     }
 

@@ -16,3 +16,8 @@ services:
       - name: 'console.command'
         command: 'jvelletti:repairprimarykey'
         schedulable: false
+  Jvelletti\JveUpgradewizard\Command\ApproveXLFCommand:
+    tags:
+      - name: 'console.command'
+        command: 'jvelletti:approvexlf'
+        schedulable: false
