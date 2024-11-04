@@ -21,6 +21,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class ApproveXLFCommand extends Command {
 
+    private bool $dryRun = false ;
+
 
 
     /**
@@ -38,7 +40,12 @@ class ApproveXLFCommand extends Command {
                 --path=/vendor/your-vendor/your-extension/\n
                 f.e.: --path=/vendor/jvelletti/jve-upgradewizard/
                 \n"
-            ) ;
+            )->addOption(
+              'dry-run',
+              'd',
+              InputOption::VALUE_OPTIONAL,
+              "option to run the command without changing files"
+           ) ; ;
 
     }
 
@@ -68,7 +75,12 @@ class ApproveXLFCommand extends Command {
         }
         $basePath = rtrim( Environment::getProjectPath() , "/" ) . "/";
 
-
+        if ($input->getOption('dry-run')) {
+            $this->dryRun = true;
+            $io->writeln(  "\n............................................. "  );
+            $io->writeln(  " Option DRY-run was given . will do no CHANGE "  );
+            $io->writeln(  "............................................. "  );
+        }
 
         $path = '' ;
         if ($input->getOption('path')) {
@@ -85,6 +97,7 @@ class ApproveXLFCommand extends Command {
             $io->writeln(  "Enter the path to Extension folder "  );
             $io->writeln(  "Must be a subfolder of: "  .$basePath   );
             $handle = fopen ("php://stdin","r");
+
 
             // remove spaces and "/" at beginning and end of input path
             $path = trim( trim(fgets($handle) ), "/" ) ;
@@ -106,29 +119,31 @@ class ApproveXLFCommand extends Command {
         $changedFiles = 0 ;
         if ( $files && count($files ) > 0  ) {
             $io->writeln(  " Files: " . $total . "\n");
-
-            $io->writeln(  "\n................................... "  );
-            $io->writeln(  "Are you shure you want to fix the Language folder?"  );
-            if ( $total > 3 ) {
-                $io->writeln(  "WARNING: Found " . $total . " Files to work on !!! "  );
-            }
-            $io->writeln(  "yes / [no]  "  );
-            $handle = fopen ("php://stdin","r");
-
-            // remove spaces and "/" at beginning and end of input path
-            $confirmed  =  strtolower( trim(fgets($handle) ) )  == "yes" ;
-            fclose($handle);
-
-            if ( !$confirmed ) {
+            if ( ! $this->dryRun ) {
                 $io->writeln(  "\n................................... "  );
-                $io->writeln(  "stopped be answer was not: yes"  );
-                $io->writeln(  "\n................................... "  );
-                return 0;
+                $io->writeln(  "Are you shure you want to fix the Language folder?"  );
+                if ( $total > 3 ) {
+                    $io->writeln(  "WARNING: Found " . $total . " Files to work on !!! "  );
+                }
+                $io->writeln(  "yes / [no]  "  );
+                $handle = fopen ("php://stdin","r");
+
+                // remove spaces and "/" at beginning and end of input path
+                $confirmed  =  strtolower( trim(fgets($handle) ) )  == "yes" ;
+                fclose($handle);
+
+                if ( !$confirmed ) {
+                    $io->writeln(  "\n................................... "  );
+                    $io->writeln(  "stopped be answer was not: yes"  );
+                    $io->writeln(  "\n................................... "  );
+                    return 0;
+                }
             }
+
             $progress = $io->createProgressBar($total) ;
-
+            $updatedFiles = 0 ;
             foreach ( $files as $file ) {
-                self::repairFile($file , $io, $basePath );
+                $updatedFiles += self::repairFile($file , $io, $basePath );
 
                 $progress->advance();
             }
@@ -139,6 +154,8 @@ class ApproveXLFCommand extends Command {
 
 
 
+        $io->writeln(  " " );
+        $io->writeln(  " Updated " .  $updatedFiles . " files");
         $io->writeln(  " " );
         return 0 ;
     }
@@ -182,7 +199,7 @@ class ApproveXLFCommand extends Command {
      * @param string $filePath
      * @return int
      */
-    public static function repairFile(string $filePath , SymfonyStyle $io, string $basePath): int
+    public function repairFile(string $filePath , SymfonyStyle $io, string $basePath): int
     {
         // Check if file exists
         if (!file_exists( $filePath)) {
@@ -190,7 +207,32 @@ class ApproveXLFCommand extends Command {
         }
 
         $info = pathinfo($filePath);
-        $io->writeln("\n Repair  " . $info  );
+        $content = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $updatedContent = [];
+
+        foreach ($content as $line) {
+            if (strpos($line, '<trans-unit') !== false && strpos($line, 'approved="yes"') === false) {
+                $line = str_replace('>', ' approved="yes">', $line);
+            }
+            $updatedContent[] = $line;
+        }
+        $newContent =  implode(PHP_EOL, $updatedContent) ;
+        if ( $newContent != implode(PHP_EOL, $content) ) {
+
+            if( $this->dryRun) {
+                if( $io->getVerbosity() > 32 ) {
+                    $io->writeln($filePath . "  - will be changed");
+                }
+                return 1 ;
+            }
+            if( $io->getVerbosity() > 32 ) {
+                $io->writeln($filePath . "  - updated");
+            }
+            file_put_contents($filePath, $newContent);
+            return 1    ;
+        }
+
+
 
         return 0 ;
     }

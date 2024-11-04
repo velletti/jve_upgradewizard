@@ -59,6 +59,7 @@ or
 
 
 
+
 ## Fixes file ending .ts .txt and .text etc to .typoscript in database with warning
 
     CONST UNWANTED_EXTENSIONS = ['ts', 'txt', 'text' , 't3' , 't3s' , 'tscript'  ] ;
@@ -176,6 +177,11 @@ If you need to avoid this and have no other option, try the following steps
 12. As in step 10 you have both versions of files, it is not import if upgrade takes time.
 13. As with step 11 your database now shuld only use New renamed files you can cleanup.
 14. to remove the OLD template files, switch to 'final-feature' branch
+
+## repair translation files in any otzher extension folder 
+this will add approved="yes" to all xlf files in a given Resource folder
+
+    ./vendor/bin/typo3 jvelletti:approvexlf --path=/vendor/jve/jv-events -vv
 
 
 
