@@ -251,6 +251,7 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
         {
             $line = trim( $line) ;
             $this->debugOutput( 123 ,  "has INCLUDE_TYPOSCRIPT or  @import or .js or .css " ) ;
+            // replace any double Quotes   "   with single  ' 
             $line = str_replace('"', "'", $line);
         } else {
             return $line ;
@@ -262,13 +263,17 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             $file = str_replace( ["/typo3conf/ext/" , "typo3conf/ext/","/EXT:" , "FILE:EXT:" , "FILE: EXT:"] , ["EXT:", "EXT:", "EXT:", "EXT:" , "EXT:" ] , $temp[1] ) ;
 
             $file = ltrim( $file , "\\") ;
+            
             foreach ( IncludeFilesUtility::UNWANTED_EXTENSIONS as $unwanted ) {
-                $from[] = "." . $unwanted ;
+                $from[] = "." . $unwanted . "'" ;
             }
-
-            $to = array_fill( 0 , count($from) ,  $wantedExtension ) ;
+            
+            // from and to must END with '  to avoid replacing .tsconfig to .tsconfigconfig 
+            
+            $to = array_fill( 0 , count($from) ,  $wantedExtension. "'" ) ;
 
             $fileNew = str_replace($from , $to , $file ) ;
+          
             $result = $isComment . "@import '" . $fileNew . "'" ;
             if ( $fileNew != $file ) {
                 $this->debugOutput( 0 ,  "MAYBE You need to rename File ENDING to " . $wantedExtension . " of :\n " . $fileNew  . " \n " ) ;

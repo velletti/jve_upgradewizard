@@ -14,6 +14,7 @@ ChangeLog
 For details have a look at the Github commits:
 https://github.com/velletti/jve_upgradewizard/commits/main
 
+12.4.24 - do not replace. tsconfig WITH .tsconfigconfig (if file was already renamed to .tsconfig ! !
 12.4.18 - repair also includeCss and includeJs and icons / logos
 12.4.17 - repair also FILE: EXT:
 12.4.16 - minor cahnges
