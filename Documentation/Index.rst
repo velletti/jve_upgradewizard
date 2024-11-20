@@ -18,7 +18,7 @@ Add/remove Frontend User to Group
   jve_upgradewizard
 
 :Version:
-  12.4.24
+  12.4.25
 
 :Language:
   en
