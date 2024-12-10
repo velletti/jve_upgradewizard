@@ -9,6 +9,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Registry;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Install\Attribute\UpgradeWizard;
 use TYPO3\CMS\Install\Updates\RepeatableInterface;
 use TYPO3\CMS\Install\Updates\UpgradeWizardInterface;
@@ -61,18 +62,17 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
     {
         $this->verboseLevel = 16 ;
 
-        if ( isset( $_SERVER['argv'][3]) ) {
-            if (  $_SERVER['argv'][3] =="--no" ) {
+        if ( isset( $_SERVER['argv'][2]) ) {
+            if (  $_SERVER['argv'][2] =="--no" ) {
                 $this->verboseLevel = 0 ;
             }
-            if (  $_SERVER['argv'][3] =="-vv" ) {
+            if (  $_SERVER['argv'][2] =="-vv" ) {
                 $this->verboseLevel = 64 ;
             }
-            if (  $_SERVER['argv'][3] =="-vvv" ) {
+            if (  $_SERVER['argv'][2] =="-vvv" ) {
                 $this->verboseLevel = 128 ;
             }
         };
-
         $startTime = time()   ;
 
         $objects = $this->getTemplates( ) ;
@@ -94,16 +94,17 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
                 $this->error = true ;
             }
         }
-        $this->debugOutput( 31 ,  "Changed  " . $changed . " of ". $objCount . " Templates in database "  ) ;
+        $this->debugOutput( 0 ,  "Changed  " . $changed . " of ". $objCount . " Templates in database "  ) ;
 
         $totalChanged += $changed ;
         $totalObjCount += $objCount ;
 
         foreach ( $this->TSconfigs as $TSconfigTable => $titleField ) {
-            $this->debugOutput( 31 ,  " " ) ;
-            $this->debugOutput( 31 ,  "  -----  TSconfig in " . $TSconfigTable . " ---- " ) ;
+            $this->debugOutput( 0 ,  " " ) ;
+            $this->debugOutput( 0 ,  "  -----  TSconfig in " . $TSconfigTable . " ---- " ) ;
             $objects = $this->getRows( $TSconfigTable , $titleField) ;
             if ( $objects  === null ) {
+                $this->debugOutput( 0 ,  "  -----  TSconfig in " . $TSconfigTable . " ---- " ) ;
                 continue ;
             }
             $changed = 0 ;
@@ -124,10 +125,9 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
 
             $this->debugOutput( 31 ,  "Changed  " . $changed . " of ". $objCount . " rows in Table: '" . $TSconfigTable . "' "  ) ;
         }
-
         foreach ( $this->otherConfig as $otherConfigTable => $otherConfigValues ) {
-            $this->debugOutput( 31 ,  " " ) ;
-            $this->debugOutput( 31 ,  "  -----  " .   $otherConfigValues['field']  . "  in " . $otherConfigTable . " ---- " ) ;
+            $this->debugOutput( 0 ,  " " ) ;
+            $this->debugOutput( 0 ,  "  -----  " .   $otherConfigValues['field']  . "  in " . $otherConfigTable . " ---- " ) ;
             $objects = $this->getRows( $otherConfigTable , $otherConfigValues['title'] , $otherConfigValues['field'] ) ;
             if ( $objects  === null ) {
                 continue ;
@@ -259,24 +259,26 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
         $temp = GeneralUtility::trimExplode( "'" , $line ) ;
         $result =  $line ;
         if (count($temp) > 1 ) {
-
             $file = str_replace( ["/typo3conf/ext/" , "typo3conf/ext/","/EXT:" , "FILE:EXT:" , "FILE: EXT:"] , ["EXT:", "EXT:", "EXT:", "EXT:" , "EXT:" ] , $temp[1] ) ;
-
             $file = ltrim( $file , "\\") ;
             
             foreach ( IncludeFilesUtility::UNWANTED_EXTENSIONS as $unwanted ) {
-                $from[] = "." . $unwanted . "'" ;
+                $from[] = "." . $unwanted  ;
             }
             
             // from and to must END with '  to avoid replacing .tsconfig to .tsconfigconfig 
             
-            $to = array_fill( 0 , count($from) ,  $wantedExtension. "'" ) ;
+            $to = array_fill( 0 , count($from) ,  $wantedExtension  ) ;
 
-            $fileNew = str_replace($from , $to , $file ) ;
-          
+            $fileNew1 = str_replace($from , $to , $file ) ;
+            $fileNew = str_replace("tsconfigconfig" , "tsconfig" , $fileNew1) ;
+            
             $result = $isComment . "@import '" . $fileNew . "'" ;
             if ( $fileNew != $file ) {
-                $this->debugOutput( 0 ,  "MAYBE You need to rename File ENDING to " . $wantedExtension . " of :\n " . $fileNew  . " \n " ) ;
+                $newFileOnDisk = GeneralUtility::getFileAbsFileName($fileNew) ;
+                if ( !file_exists($newFileOnDisk)) {
+                    $this->debugOutput( 0 ,  "You need to rename File  to '" . $wantedExtension  . " \n " . $newFileOnDisk . " does not exist" . "\n" ) ;
+                }
             }
             if ( strpos( $result , "fileadmin/") > 0 ) {
                 if (  $isComment === '' ) {
