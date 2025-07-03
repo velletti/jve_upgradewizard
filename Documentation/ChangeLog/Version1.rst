@@ -14,6 +14,7 @@ ChangeLog
 For details have a look at the Github commits:
 https://github.com/velletti/jve_upgradewizard/commits/main
 
+12.4.28 - second dot in rename files command is fixed
 12.4.27 - Only show warning to rename File if file does not exist
 12.4.26 - Backend Layouts and gridelements should also be renamed to tsconfig
 12.4.25 - fix version number in emconfig for TER
