@@ -204,7 +204,10 @@ class UpdateFilesCommand extends Command {
         // Check if file has one of the specified extensions
         if (in_array($extension, IncludeFilesUtility::UNWANTED_EXTENSIONS )) {
             $newFilePath = $info['dirname'] . DIRECTORY_SEPARATOR . $info['filename'] . '.' . IncludeFilesUtility::WANTED_EXTENSION ;
-
+            $newFilePath = str_replace( ".." , "." , $newFilePath ) ;
+            if (strpos(strtolower($newFilePath) , "tsconfig")) {
+                $newFilePath = str_replace( IncludeFilesUtility::WANTED_EXTENSION , IncludeFilesUtility::TSCONFIG_EXTENSION , $newFilePath ) ;
+            }
             if ( $newFilePath !== $filePath ) {
 
                 if (rename($filePath, $newFilePath)) {

@@ -97,6 +97,10 @@ final class IncludeFilesUtility
             $to = array_fill( 0 , count($from) , "." . IncludeFilesUtility::WANTED_EXTENSION) ;
 
             $fileNew = str_replace($from , $to , $file ) ;
+            $fileNew = str_replace( ".." , "." , $fileNew ) ;
+            if ( strpos(strtolower($fileNew) , "tsconfig") !== false ) {
+                $fileNew = str_replace( IncludeFilesUtility::WANTED_EXTENSION , IncludeFilesUtility::TSCONFIG_EXTENSION , $fileNew ) ;
+            }
             $result = $isComment . "@import '" . $fileNew . "'" ;
             if ( strpos( $result , "fileadmin/") > 0 ) {
                 if ( $io ) {
