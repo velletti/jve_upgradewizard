@@ -2,9 +2,9 @@
 # what does extension do
 ========================
 
-Version 12.4.21 | 31.10.2024
+Version 12.4.32 | 14.7.2025
 
-Tested with TYPO3 LTS 12.4.16 under PHP 8.3 \
+Tested with TYPO3 LTS 12.4.34 under PHP 8.3 \
 Tested with TYPO3 LTS 12.4.6 under PHP 8.1 \
 Tested with TYPO3 LTS 11.4.31 under PHP 7.4 \
 
