@@ -32,8 +32,8 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
     ] ;
 
     public array $otherConfig = [
-       'tx_gridelements_backend_layout' =>  ['field' => 'config' , 'extension' => '.tsconfig' , 'title' => 'title' ] ,
-       'backend_layout' =>  ['field' => 'config' , 'extension' => '.tsconfig' , 'title' => 'title' ] ,
+       'tx_gridelements_backend_layout' =>  ['field' => 'config' , 'extension' => '.typoscript' , 'title' => 'title' ] ,
+       'backend_layout' =>  ['field' => 'config' , 'extension' => '.typoscript' , 'title' => 'title' ] ,
     ] ;
 
     /**
