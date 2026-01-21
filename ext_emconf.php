@@ -11,7 +11,7 @@ $EM_CONF['jve_upgradewizard'] = [
     'version' => '12.4.27',
     'constraints' => [
         'depends' => [
-            'typo3' => '11.5.1-12.4.99',
+            'typo3' => '11.5.0-13.4.99',
         ],
         'conflicts' => [],
         'suggests' => [],

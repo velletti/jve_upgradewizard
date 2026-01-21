@@ -353,7 +353,7 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
 
 
 
-    private function debugOutput( $minVerbosity , $text ) {
+    private function debugOutput( $minVerbosity , $text ): void {
         if ( $this->verboseLevel > $minVerbosity  ) {
             echo "\n" . $text ;
         }

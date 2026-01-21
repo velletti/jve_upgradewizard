@@ -77,9 +77,10 @@ class RepairPrimaryKeyCommand extends Command {
                ->select('uid_local', 'uid_foreign')
                ->from($table)
                ->groupBy('uid_local', 'uid_foreign')
-               ->having('COUNT(*) > 1')
-               ->execute()
-               ->fetchAll();
+                ->having('COUNT(*) > 1')
+                ->executeQuery()
+                ->fetchAllAssociative();
+
             $total = count($duplicates) ;
             if ( $total) {
                 $io->writeln("\nFound duplicate entries in table " . $table . ".\n");
@@ -89,11 +90,10 @@ class RepairPrimaryKeyCommand extends Command {
                      $progress->advance();
                      $queryBuilder
                            ->delete($table)
-                           ->where(
-                              $queryBuilder->expr()->eq('uid_local', $duplicate['uid_local']),
-                              $queryBuilder->expr()->eq('uid_foreign', $duplicate['uid_foreign'])
-                           )
-                           ->execute();
+                         ->where(
+                             $queryBuilder->expr()->eq('uid_local', $duplicate['uid_local']),
+                             $queryBuilder->expr()->eq('uid_foreign', $duplicate['uid_foreign']))
+                         ->executeStatement();
                   }
                   $progress->finish();
                   $io->writeln("\n\nDeleted " . $total . " duplicate entries in table " . $table . ".\n");
