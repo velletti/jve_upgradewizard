@@ -2,11 +2,12 @@
 # what does extension do
 ========================
 
-Version 12.4.32 | 14.7.2025
+Version 13.4.2 | 21.1.2026
 
+Tested with TYPO3 LTS 13.4.24 under PHP 8.4 \
 Tested with TYPO3 LTS 12.4.34 under PHP 8.3 \
 Tested with TYPO3 LTS 12.4.6 under PHP 8.1 \
-Tested with TYPO3 LTS 11.4.31 under PHP 7.4 \
+Tested with TYPO3 LTS 11.4.31 under PHP 7.4 \  (use older version of extension!)
 
 works on following database tables / fields:  \
 
@@ -51,6 +52,7 @@ or
 5. you should work with any vcs like git
 6. make a copy of your template folder for easier testing
 7. replace -vv against -vvv to get more verbose output in follwing commands
+8. maybe this is needed ./vendor/bin/typo3 cache:flush
 
 
     ./vendor/bin/typo3 upgrade:run jveUpgradewizard_upgradeTemplates -vv
