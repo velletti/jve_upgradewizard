@@ -95,6 +95,7 @@ class RepairPrimaryKeyCommand extends Command {
                              $queryBuilder->expr()->eq('uid_foreign', $duplicate['uid_foreign']))
                          ->executeStatement();
                   }
+                  // @extensionScannerIgnoreLine
                   $progress->finish();
                   $io->writeln("\n\nDeleted " . $total . " duplicate entries in table " . $table . ".\n");
             } else {
