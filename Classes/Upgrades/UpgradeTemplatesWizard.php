@@ -170,7 +170,7 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
 
 
     private function checkTemplate($template ) {
-        $configLines = GeneralUtility::trimExplode("\n" , $template['config'] ) ;
+        $configLines = GeneralUtility::trimExplode("\n" , $template['config'] ?? '') ;
         $this->debugOutput( 31 ,  "Template " . $template['uid'] . " on pid: "  . $template['pid'] . " " .  $template['title']) ;
         $this->debugOutput( 31 ,  "" ) ;
         $configLinesNew= '' ;
@@ -187,7 +187,7 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
             }
         }
 
-        $constantsLines = GeneralUtility::trimExplode("\n" , $template['constants'] ) ;
+        $constantsLines = GeneralUtility::trimExplode("\n" , (string)$template['constants'] ?? '' ) ;
         if ( $constantsLines ) {
             foreach ($constantsLines as $line ) {
                 $this->debugOutput( 123 ,  "Line: " . $line ) ;
@@ -211,7 +211,7 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
 
 
     private function checkRow($row , $TSconfigTable , $titleField , $valueField , $wantedExtension) {
-        $configLines = GeneralUtility::trimExplode("\n" , $row[$valueField] ) ;
+        $configLines = GeneralUtility::trimExplode("\n" , $row[$valueField] ?? '') ;
         $configLinesNew= '' ;
         if ( $configLines && count( $configLines) > 0 && trim($configLines[0]) != ''  ) {
             $this->debugOutput( 31 ,  $valueField . " " . $row['uid'] . " on pid: "  . $row['pid'] . " " .  $row[$titleField]) ;
@@ -256,7 +256,7 @@ final class UpgradeTemplatesWizard implements UpgradeWizardInterface , Repeatabl
         } else {
             return $line ;
         }
-        $temp = GeneralUtility::trimExplode( "'" , $line ) ;
+        $temp = GeneralUtility::trimExplode( "'" , $line ?? '') ;
         $result =  $line ;
         if (count($temp) > 1 ) {
             $file = str_replace( ["/typo3conf/ext/" , "typo3conf/ext/","/EXT:" , "FILE:EXT:" , "FILE: EXT:"] , ["EXT:", "EXT:", "EXT:", "EXT:" , "EXT:" ] , $temp[1] ) ;
